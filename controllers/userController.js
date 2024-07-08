@@ -1,33 +1,101 @@
-// Method to add a friend
-exports.addFriend = async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(
-            req.params.userId,
-            { $addToSet: { friends: req.params.friendId } }, // Use $addToSet to avoid duplicates
-            { new: true }
-        );
-        if (!user) {
-            return res.status(404).send({ message: 'User not found' });
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).send({ message: 'Error adding friend', error: error.message });
-    }
-};
+const { User, Friend } = require('../models');
 
-// Method to remove a friend
-exports.removeFriend = async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(
-            req.params.userId,
-            { $pull: { friends: req.params.friendId } }, // Use $pull to remove the friendId from the array
-            { new: true }
-        );
-        if (!user) {
-            return res.status(404).send({ message: 'User not found' });
+module.exports = {
+    // Get all users
+    async getUsers(req, res) {
+        try {
+            const users = await User.find().populate('friends');
+            res.json(users);
+        } catch (err) {
+            res.status(500).json(err);
         }
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).send({ message: 'Error removing friend', error: error.message });
+    },
+    // Get a user
+    async getSingleUser(req, res) {
+        try {
+            const user = await User.findOne({ _id: req.params.userId })
+                .populate('friends');
+
+            if (!user) {
+                return res.status(404).json({ message: 'No user with that ID' });
+            }
+
+            res.json(user);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
+    // Create a user
+    async createUser(req, res) {
+        try {
+            const user = await User.create(req.body);
+            res.json(user);
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+    // Delete a user
+    async deleteUser(req, res) {
+        try {
+            const user = await User.findOneAndDelete({ _id: req.params.userId });
+
+            if (!user) {
+                res.status(404).json({ message: 'No user with that ID' });
+            }
+
+            await Friend.deleteMany({ _id: { $in: user.friends } });
+            res.json({ message: 'User and friends deleted!' });
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
+    // Update a user
+    async updateUser(req, res) {
+        try {
+            const user = await User.findOneAndUpdate(
+                { _id: req.params.userId },
+                { $set: req.body },
+                { runValidators: true, new: true }
+            );
+            if (!user) {
+                return res.status(404).json({ message: 'No user with that ID' });
+            }
+            res.json(user);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
+    // Add a friend
+    async addFriend(req, res) {
+        try {
+            const user = await User.findByIdAndUpdate(
+                req.params.userId,
+                { $addToSet: { friends: req.params.friendId } }, // Use $addToSet to avoid duplicates
+                { new: true }
+            );
+            if (!user) {
+                return res.status(404).send({ message: 'User not found' });
+            }
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(500).send({ message: 'Error adding friend', error: error.message });
+        }
+    },
+    // Remove a friend
+    async removeFriend (req, res) {
+        try {
+            const user = await User.findByIdAndUpdate(
+                req.params.userId,
+                { $pull: { friends: req.params.friendId } }, // Use $pull to remove the friendId from the array
+                { new: true }
+            );
+            if (!user) {
+                return res.status(404).send({ message: 'User not found' });
+            }
+            res.status(200).json(user);
+        } catch (error) {
+            res.status(500).send({ message: 'Error removing friend', error: error.message });
+        }
     }
 };

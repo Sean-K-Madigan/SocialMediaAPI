@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const UserController = require('../controllers/UserController');
+const {
+  getUsers,
+  getSingleUser,
+  createUser,
+  deleteUser,
+  updateUser,
+  addFriend,
+  removeFriend,
+} = require('../../controllers/userController');
 
-// GET all users
-router.get('/api/users', UserController.getAllUsers);
+// /api/users
+router.route('/').get(getUsers).post(createUser);
 
-// GET a single user by its _id and populate thought and friend data
-router.get('/api/users/:id', UserController.getUserById);
+// /api/users/:userId
+router
+  .route('/:userId')
+  .get(getSingleUser)
+  .put(updateUser)
+  .delete(deleteUser);
 
-// POST a new user
-router.post('/api/users', UserController.createUser);
-
-// PUT to update a user by its _id
-router.put('/api/users/:id', UserController.updateUserById);
-
-// DELETE to remove user by its _id
-router.delete('/api/users/:id', UserController.deleteUserById);
-
-// POST to add a new friend to a user's friend list
-router.post('/api/users/:userId/friends/:friendId', UserController.addFriend);
-
-// DELETE to remove a friend from a user's friend list
-router.delete('/api/users/:userId/friends/:friendId', UserController.removeFriend);
+// /api/users/:userId/friends/:friendId
+router.route('/:userId/friends/:friendId').post(addFriend).delete(removeFriend);
 
 module.exports = router;
