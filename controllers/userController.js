@@ -4,7 +4,7 @@ module.exports = {
     // Get all users
     async getUsers(req, res) {
         try {
-            const users = await User.find().populate('friends');
+            const users = await User.find().select("-__v");
             res.json(users);
         } catch (err) {
             res.status(500).json(err);
@@ -13,8 +13,7 @@ module.exports = {
     // Get a user
     async getSingleUser(req, res) {
         try {
-            const user = await User.findOne({ _id: req.params.userId })
-                .populate('friends');
+            const user = await User.findOne({ _id: req.params.userId });
 
             if (!user) {
                 return res.status(404).json({ message: 'No user with that ID' });
@@ -44,8 +43,6 @@ module.exports = {
                 res.status(404).json({ message: 'No user with that ID' });
             }
 
-            await Friend.deleteMany({ _id: { $in: user.friends } });
-            res.json({ message: 'User and friends deleted!' });
         } catch (err) {
             res.status(500).json(err);
         }
